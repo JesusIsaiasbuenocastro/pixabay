@@ -1,197 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
+import Imagen from './components/Imagen';
+import Footer from "./components/Footer";
+import Error from "./components/Error";
+import Pagination from "./components/Pagination";
+import Spinner from "./components/Spinner";
 
 const API_KEY = "15053597-314839e8afc72ab12217cc7b9";
 const PER_PAGE = 30;
 
 const CATEGORIES = ["naturaleza", "tecnología", "arquitectura", "viaje", "comida", "animales", "deportes", "música"];
-
-// ── Spinner ─────────────────────────────────────────────────────────────────
-function Spinner() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "4rem 0" }}>
-      <div style={{
-        width: 40, height: 40, border: "3px solid #e5e7eb",
-        borderTopColor: "#6366f1", borderRadius: "50%",
-        animation: "spin 0.8s linear infinite"
-      }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-}
-
-// ── Error Alert ──────────────────────────────────────────────────────────────
-function ErrorAlert({ mensaje }) {
-  return (
-    <div style={{
-      background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b",
-      borderRadius: 10, padding: "12px 16px", fontSize: 14,
-      display: "flex", alignItems: "center", gap: 8, marginTop: 8
-    }}>
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      {mensaje}
-    </div>
-  );
-}
-
-// ── Tag Badge ────────────────────────────────────────────────────────────────
-function TagBadge({ tag, onClick }) {
-  return (
-    <button
-      onClick={() => onClick(tag)}
-      style={{
-        background: "#f3f4f6", border: "none", borderRadius: 20,
-        padding: "3px 10px", fontSize: 12, color: "#374151",
-        cursor: "pointer", transition: "background 0.15s",
-        fontFamily: "inherit"
-      }}
-      onMouseOver={e => e.target.style.background = "#e0e7ff"}
-      onMouseOut={e => e.target.style.background = "#f3f4f6"}
-    >
-      {tag}
-    </button>
-  );
-}
-
-// ── Image Card ───────────────────────────────────────────────────────────────
-function ImageCard({ imagen, onTagClick }) {
-  const { largeImageURL, likes, previewURL, tags, views, user, userImageURL } = imagen;
-  const tagList = tags.split(",").map(t => t.trim()).slice(0, 3);
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        borderRadius: 14, overflow: "hidden", background: "#fff",
-        boxShadow: hovered
-          ? "0 12px 40px rgba(0,0,0,0.14)"
-          : "0 2px 8px rgba(0,0,0,0.07)",
-        transition: "box-shadow 0.25s, transform 0.25s",
-        transform: hovered ? "translateY(-4px)" : "translateY(0)",
-        display: "flex", flexDirection: "column"
-      }}
-    >
-      {/* Image */}
-      <div style={{ position: "relative", overflow: "hidden", aspectRatio: "4/3" }}>
-        <img
-          src={previewURL}
-          alt={tags}
-          style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            transition: "transform 0.4s",
-            transform: hovered ? "scale(1.05)" : "scale(1)"
-          }}
-        />
-        {/* Stats overlay */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "linear-gradient(transparent, rgba(0,0,0,0.55))",
-          padding: "24px 12px 10px",
-          display: "flex", gap: 12, opacity: hovered ? 1 : 0,
-          transition: "opacity 0.2s"
-        }}>
-          <Stat icon="♥" value={likes.toLocaleString()} />
-          <Stat icon="👁" value={views.toLocaleString()} />
-        </div>
-      </div>
-
-      {/* Body */}
-      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-        {/* Author */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {userImageURL
-            ? <img src={userImageURL} alt={user} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }} />
-            : <div style={{
-                width: 26, height: 26, borderRadius: "50%", background: "#6366f1",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontSize: 11, fontWeight: 600
-              }}>{user?.charAt(0).toUpperCase()}</div>
-          }
-          <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 500 }}>{user}</span>
-        </div>
-
-        {/* Tags */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-          {tagList.map(tag => <TagBadge key={tag} tag={tag} onClick={onTagClick} />)}
-        </div>
-
-        {/* CTA */}
-        <a
-          href={largeImageURL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: "block", textAlign: "center", background: "#6366f1",
-            color: "#fff", borderRadius: 8, padding: "8px 0", fontSize: 13,
-            fontWeight: 600, textDecoration: "none", marginTop: "auto",
-            transition: "background 0.15s"
-          }}
-          onMouseOver={e => e.target.style.background = "#4f46e5"}
-          onMouseOut={e => e.target.style.background = "#6366f1"}
-        >
-          Ver imagen completa ↗
-        </a>
-      </div>
-    </div>
-  );
-}
-
-function Stat({ icon, value }) {
-  return (
-    <span style={{ color: "#fff", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-      <span>{icon}</span> {value}
-    </span>
-  );
-}
-
-// ── Pagination ───────────────────────────────────────────────────────────────
-function Pagination({ paginaActual, totalPaginas, onAnterior, onSiguiente }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, margin: "2.5rem 0" }}>
-      <button
-        onClick={onAnterior}
-        disabled={paginaActual === 1}
-        style={{
-          padding: "9px 20px", borderRadius: 8,
-          border: "1.5px solid #e5e7eb", background: "#fff",
-          color: paginaActual === 1 ? "#d1d5db" : "#374151",
-          cursor: paginaActual === 1 ? "not-allowed" : "pointer",
-          fontWeight: 600, fontSize: 14, transition: "all 0.15s",
-          fontFamily: "inherit"
-        }}
-      >
-        ← Anterior
-      </button>
-
-      <span style={{
-        fontSize: 14, color: "#6b7280",
-        background: "#f9fafb", border: "1px solid #e5e7eb",
-        borderRadius: 8, padding: "9px 16px"
-      }}>
-        {paginaActual} / {totalPaginas}
-      </span>
-
-      <button
-        onClick={onSiguiente}
-        disabled={paginaActual === totalPaginas}
-        style={{
-          padding: "9px 20px", borderRadius: 8,
-          border: "1.5px solid #6366f1", background: "#6366f1",
-          color: paginaActual === totalPaginas ? "#a5b4fc" : "#fff",
-          cursor: paginaActual === totalPaginas ? "not-allowed" : "pointer",
-          fontWeight: 600, fontSize: 14, transition: "all 0.15s",
-          fontFamily: "inherit",
-          opacity: paginaActual === totalPaginas ? 0.6 : 1
-        }}
-      >
-        Siguiente →
-      </button>
-    </div>
-  );
-}
 
 // ── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
@@ -294,7 +111,7 @@ export default function App() {
                 Buscar
               </button>
             </div>
-            {error && <ErrorAlert mensaje="Escribe algo para buscar imágenes." />}
+            {error && <Error mensaje="Escribe algo para buscar imágenes." />}
           </form>
 
           {/* Quick categories */}
@@ -364,7 +181,7 @@ export default function App() {
             gap: "1.25rem"
           }}>
             {imagenes.map(img => (
-              <ImageCard key={img.id} imagen={img} onTagClick={handleTag} />
+              <Imagen key={img.id} imagen={img} onTagClick={handleTag} />
             ))}
           </div>
         )}
@@ -379,15 +196,8 @@ export default function App() {
           />
         )}
       </main>
-
       {/* ── Footer ── */}
-      <footer style={{ textAlign: "center", padding: "1.5rem", color: "#9ca3af", fontSize: 13, borderTop: "1px solid #e5e7eb" }}>
-        Imágenes cortesía de{" "}
-        <a href="https://pixabay.com" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1" }}>
-          Pixabay
-        </a>{" "}
-        · Construido con React
-      </footer>
+      <Footer/>
     </div>
   );
 }
