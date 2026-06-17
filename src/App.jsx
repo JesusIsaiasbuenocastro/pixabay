@@ -5,7 +5,7 @@ import Error from "./components/Error";
 import Pagination from "./components/Pagination";
 import Spinner from "./components/Spinner";
 
-const API_KEY = "15053597-314839e8afc72ab12217cc7b9";
+const API_KEY = process.env.REACT_APP_KEY_PIXABAY;
 const PER_PAGE = 30;
 
 const CATEGORIES = ["naturaleza", "tecnología", "arquitectura", "viaje", "comida", "animales", "deportes", "música"];

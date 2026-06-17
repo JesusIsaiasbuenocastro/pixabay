@@ -1,70 +1,214 @@
-# Getting Started with Create React App
+# 🖼️ Pixabay Explorer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Un buscador de imágenes libre de derechos construido con **React**, consumiendo la API pública de Pixabay. Proyecto de práctica para fortalecer habilidades de frontend como desarrollador backend.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 📸 Demo rápida
 
-### `npm start`
+| Feature | Estado |
+|---|---|
+| Búsqueda en tiempo real | ✅ |
+| Categorías de acceso rápido | ✅ |
+| Paginación dinámica | ✅ |
+| Tarjetas con hover interactivo | ✅ |
+| Clic en tags para búsqueda directa | ✅ |
+| Diseño responsivo (mobile-first) | ✅ |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+---
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🏗️ Arquitectura del proyecto
 
-### `npm test`
+```
+pixabay/
+├── public/
+│   └── index.html          # Punto de entrada HTML
+└── src/
+    ├── index.js             # Montaje de la app React en el DOM
+    ├── App.js               # Componente raíz — estado global y fetching
+    └── components/
+        ├── Formulario.js    # Input de búsqueda + validación
+        ├── ListadoImagenes.js # Grid que itera y renderiza imágenes
+        ├── Imagen.js        # Tarjeta individual de imagen
+        └── Error.js         # Alerta de validación de formulario
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Diagrama de flujo de datos
 
-### `npm run build`
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           App.js                                │
+│                                                                 │
+│  useState: busqueda, imagenes, paginaActual, totalPaginas       │
+│                                                                 │
+│  useEffect ──────────────────────────────► Pixabay API          │
+│     triggers on: [busqueda, paginaActual]     │                 │
+│                                               ▼                 │
+│                                         resultado.hits[]        │
+│                                         resultado.totalHits      │
+│                ┌──────────────────────────────┘                 │
+│                ▼                                                │
+│  ┌─────────────┐    ┌──────────────────────────────────┐       │
+│  │  Formulario │    │       ListadoImagenes             │       │
+│  │             │    │                                   │       │
+│  │  onChange ──┼──► │  imagenes.map() ──► <Imagen />   │       │
+│  │  onSubmit ──┼──► │                                   │       │
+│  │             │    │  largeImageURL                    │       │
+│  │  <Error />  │    │  previewURL                       │       │
+│  └─────────────┘    │  likes / views / tags             │       │
+│                     └──────────────────────────────────┘       │
+│                                                                 │
+│  Botones de paginación: paginaAnterior() / paginaSiguiente()   │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Flujo de una búsqueda
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+Usuario escribe término
+        │
+        ▼
+Formulario.onSubmit()
+        │
+        ├── ¿Término vacío? ──► muestra <Error />
+        │
+        ▼
+guardarBusqueda(termino)  [prop callback hacia App.js]
+        │
+        ▼
+useEffect detecta cambio en `busqueda`
+        │
+        ▼
+GET https://pixabay.com/api/?key=...&q={termino}&page={paginaActual}
+        │
+        ▼
+guardarImagenes(resultado.hits)
+guardarTotalPaginas(Math.ceil(totalHits / porPagina))
+        │
+        ▼
+Re-render de ListadoImagenes con nuevas tarjetas
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 📦 Librerías utilizadas
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### React `^17.0.1`
+El core de la aplicación. Se usan los siguientes hooks de la librería estándar:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Hook | Uso en este proyecto |
+|---|---|
+| `useState` | Controla `busqueda`, `imagenes`, `paginaActual`, `totalPaginas`, y el estado de error del formulario |
+| `useEffect` | Dispara `consultarAPI()` cada vez que cambia `busqueda` o `paginaActual`. El array de dependencias `[busqueda, paginaActual]` evita llamadas innecesarias |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+No se usan librerías de UI externas — todo el estilo es CSS-in-JS o clases de Bootstrap.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### React DOM `^17.0.1`
+Monta la app en el nodo `#root` del HTML:
+```js
+// src/index.js
+ReactDOM.render(<App />, document.getElementById('root'));
+```
 
-## Learn More
+### React Scripts `^5.0.1` (Create React App)
+Proporciona el toolchain completo sin configuración manual:
+- Webpack (bundling)
+- Babel (transpilación JSX/ES6+)
+- ESLint (linting)
+- Jest (testing)
+- Dev server con HMR (Hot Module Replacement)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Testing Library
+- `@testing-library/react` — renderiza componentes para tests
+- `@testing-library/jest-dom` — matchers adicionales para el DOM (p.ej. `toBeInTheDocument()`)
+- `@testing-library/user-event` — simula interacciones de usuario reales
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Web Vitals `^0.2.4`
+Mide métricas de rendimiento (LCP, FID, CLS) en producción:
+```js
+// src/reportWebVitals.js
+reportWebVitals(console.log); // Imprime en consola durante desarrollo
+```
 
-### Code Splitting
+### Bootstrap (via CDN o importación)
+Clases utilitarias para grid y componentes: `container`, `jumbotron`, `btn`, `card`, `form-control`, `alert`, etc.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 🚀 Instalación y uso
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/pixabay-explorer.git
+cd pixabay-explorer
 
-### Making a Progressive Web App
+# 2. Instalar dependencias
+npm install
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+# 3. Agregar tu API key de Pixabay
+# Edita src/App.js y reemplaza el valor de `key`
 
-### Advanced Configuration
+# 4. Correr en desarrollo
+npm start
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+# 5. Build de producción
+npm run build
+```
 
-### Deployment
+> ⚠️ **API Key**: Obtén la tuya gratis en [pixabay.com/api](https://pixabay.com/api/). No expongas tu key en repositorios públicos — considera usar variables de entorno (`.env`).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 💡 Ideas para mejorar el proyecto
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Mejoras técnicas
+- **Variables de entorno**: mover la API key a `.env` (`REACT_APP_PIXABAY_KEY`)
+- **Custom Hook**: extraer la lógica de fetching en `usePixabay(termino, pagina)` para separar responsabilidades
+- **useReducer**: reemplazar múltiples `useState` por un reducer para el estado de la búsqueda
+- **AbortController**: cancelar la petición anterior si el usuario escribe rápido (debounce + abort)
+- **React.memo / useCallback**: optimizar re-renders en `<Imagen />` y `<ListadoImagenes />`
+
+### Nuevas funcionalidades
+- **Filtros**: tipo de imagen (foto/vector/ilustración), orientación (horizontal/vertical), color dominante
+- **Lightbox**: modal para ver la imagen en alta resolución sin salir de la app
+- **Favoritos**: guardar imágenes favoritas en `localStorage`
+- **Búsqueda por voz**: usando la Web Speech API del navegador
+- **Infinite scroll**: reemplazar la paginación por scroll infinito con `IntersectionObserver`
+- **Modo oscuro**: toggle de tema claro/oscuro con CSS custom properties
+- **Skeleton screens**: placeholders animados mientras cargan las imágenes
+- **Descarga directa**: botón para descargar la imagen en alta resolución
+
+## 🌐 API de Pixabay
+
+Endpoint base:
+```
+https://pixabay.com/api/?key={API_KEY}&q={termino}&per_page=30&page={pagina}
+```
+
+Campos útiles de cada imagen (`resultado.hits[n]`):
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | number | ID único |
+| `previewURL` | string | Thumbnail (150x150) |
+| `largeImageURL` | string | Imagen grande (hasta 1920px) |
+| `tags` | string | Tags separados por coma |
+| `likes` | number | Likes totales |
+| `views` | number | Vistas totales |
+| `user` | string | Nombre del autor |
+| `userImageURL` | string | Avatar del autor |
+| `totalHits` | number | Total de resultados (en la respuesta raíz) |
+
+---
+
+## Configuración
+
+1. Copia el archivo de ejemplo:
+cp .env.example .env
+
+2. Obtén tu API key gratis en:
+https://pixabay.com/api/docs/
+
+3. Reemplaza la variable en `.env`
+
+---
