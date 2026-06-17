@@ -1,4 +1,4 @@
-# 🖼️ Pixabay Explorer
+# Pixabay Explorer
 
 Un buscador de imágenes libre de derechos construido con **React**, consumiendo la API pública de Pixabay. Proyecto de práctica para fortalecer habilidades de frontend como desarrollador backend.
 
@@ -14,6 +14,13 @@ Un buscador de imágenes libre de derechos construido con **React**, consumiendo
 | Tarjetas con hover interactivo | ✅ |
 | Clic en tags para búsqueda directa | ✅ |
 | Diseño responsivo (mobile-first) | ✅ |
+
+---
+
+
+## 🖼️  Deploy en Netlify
+
+`https://pixabay-explorer-aac49c.netlify.app/`
 
 ---
 
@@ -139,8 +146,8 @@ Clases utilitarias para grid y componentes: `container`, `jumbotron`, `btn`, `ca
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/pixabay-explorer.git
-cd pixabay-explorer
+git clone https://github.com/JesusIsaiasbuenocastro/pixabay.git
+cd pixabay
 
 # 2. Instalar dependencias
 npm install
@@ -153,9 +160,10 @@ npm start
 
 # 5. Build de producción
 npm run build
+
 ```
 
-> ⚠️ **API Key**: Obtén la tuya gratis en [pixabay.com/api](https://pixabay.com/api/). No expongas tu key en repositorios públicos — considera usar variables de entorno (`.env`).
+> ⚠️ **API Key**: Obtén la tuya gratis en [pixabay.com/api](https://pixabay.com/api/docs). — considera usar variables de entorno (`.env`).
 
 ---
 
